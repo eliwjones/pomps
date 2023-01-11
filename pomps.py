@@ -6,14 +6,9 @@ import shutil
 from pathlib import Path
 
 
-def load_and_transform_source_data(name,
-                                   transform_func,
-                                   load_func,
-                                   env,
-                                   execution_date,
-                                   root_dir,
-                                   group_key_func=None,
-                                   group_buckets=10):
+def load_and_transform_source_data(
+    name, transform_func, load_func, env, execution_date, root_dir, group_key_func=None, group_buckets=10
+):
     """
     TODO: One might wish to group source_data, depending on its structure.  We would, of course, like to avoid
       this if at all possible since it requires slurping all data into RAM, unless one implements a scatter
@@ -66,34 +61,34 @@ def group_data(source_path, grouped_path, group_key_func, group_buckets):
 
     if not Path(buckets_path).is_dir():
         tmp_buckets_path = f"{buckets_path}_tmp"
-        
+
         shutil.rmtree(tmp_buckets_path)
         Path(tmp_buckets_path).mkdir(parents=True, exist_ok=True)
-        
+
         with open(source_path, encoding='utf-8') as source:
             for line in source:
                 group_key = group_key_func(json.loads(line[-1]))
                 bucket = str(fixed_hash(group_key) % group_buckets).zfill(len(str(group_buckets)))
                 bucket_path = f"{tmp_buckets_path}/{bucket}.jsonl"
-                
+
                 with open(bucket_path, 'a', encoding='utf-8') as f:
                     f.write(line)
 
         shutil.move(tmp_buckets_path, buckets_path)
 
     os.remove(grouped_path + '.tmp')
-    
+
     for bucket_path in glob.glob(f"{buckets_path}/*"):
         grouped_data = {}
-        
+
         with open(bucket_path, encoding='utf-8') as b:
             for line in b:
                 data = json.loads(line[-1])
                 group_key = group_key_func(data)
-                
+
                 if group_key not in grouped_data:
                     grouped_data[group_key] = []
-                    
+
                 grouped_data[group_key].append(data)
 
         with open(grouped_path + '.tmp', 'a', encoding='utf-8') as tmpfile:

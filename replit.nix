@@ -1,5 +1,7 @@
 { pkgs }: {
   deps = [
+    pkgs.nano
+    pkgs.python38Packages.black
     pkgs.python38Full
   ];
   env = {
