@@ -1,12 +1,19 @@
+import glob
 import json
 import os
+import shutil
 
 from pathlib import Path
 
 
-def load_and_transform_source_data(
-    name, transform_func, load_func, env, execution_date, root_dir, group_key_func=None, group_buckets=10
-):
+def load_and_transform_source_data(name,
+                                   transform_func,
+                                   load_func,
+                                   env,
+                                   execution_date,
+                                   root_dir,
+                                   group_key_func=None,
+                                   group_buckets=10):
     """
     TODO: One might wish to group source_data, depending on its structure.  We would, of course, like to avoid
       this if at all possible since it requires slurping all data into RAM, unless one implements a scatter
@@ -33,20 +40,11 @@ def load_and_transform_source_data(
         os.rename(source_path + '.tmp', source_path)
 
     if group_key_func:
-        """
-        We expect the data to be grouped and so we must do this.
+        grouped_path = f"{namespace}/{name}/grouped_source_data.jsonl"
+        if not Path(grouped_path).is_file():
+            group_data(source_path, grouped_path, group_key_func, group_buckets)
 
-        We must create a group folder, and then scan over source_path, generating group_keys and scattering
-        documents into buckets via some hash function.
-
-        Then, we must go through each bucket and process/group the documents since we've presumably reduced the RAM
-        footprint enough to enable processing said bucket of items.
-
-        NOTE: We must iron fist the case where a group_key is None.. that should not be allowed as it lends itself
-        to "hot keys" and RAM explosion.
-        """
-
-        grouped_path = f"{namespace}/{name}/grouped/source_data.jsonl"
+        source_path = grouped_path
 
     with open(transformed_path + '.tmp', 'w', encoding='utf-8') as tmpfile, open(source_path, encoding='utf-8') as source:
         for line in source:
@@ -62,8 +60,50 @@ def generate_sorted_join_key_index(data_path):
     pass
 
 
-def group_data(data_path, group_key_func):
-    pass
+def group_data(source_path, grouped_path, group_key_func, group_buckets):
+    grouped_file = grouped_path.split('/')[-1]
+    buckets_path = grouped_path.replace(grouped_file, 'buckets')
+
+    if not Path(buckets_path).is_dir():
+        tmp_buckets_path = f"{buckets_path}_tmp"
+        
+        shutil.rmtree(tmp_buckets_path)
+        Path(tmp_buckets_path).mkdir(parents=True, exist_ok=True)
+        
+        with open(source_path, encoding='utf-8') as source:
+            for line in source:
+                group_key = group_key_func(json.loads(line[-1]))
+                bucket = str(fixed_hash(group_key) % group_buckets).zfill(len(str(group_buckets)))
+                bucket_path = f"{tmp_buckets_path}/{bucket}.jsonl"
+                
+                with open(bucket_path, 'a', encoding='utf-8') as f:
+                    f.write(line)
+
+        shutil.move(tmp_buckets_path, buckets_path)
+
+    os.remove(grouped_path + '.tmp')
+    
+    for bucket_path in glob.glob(f"{buckets_path}/*"):
+        grouped_data = {}
+        
+        with open(bucket_path, encoding='utf-8') as b:
+            for line in b:
+                data = json.loads(line[-1])
+                group_key = group_key_func(data)
+                
+                if group_key not in grouped_data:
+                    grouped_data[group_key] = []
+                    
+                grouped_data[group_key].append(data)
+
+        with open(grouped_path + '.tmp', 'a', encoding='utf-8') as tmpfile:
+            for group_key in grouped_data:
+                line = {'group_key': group_key, 'data': grouped_data[group_key]}
+                tmpfile.write(json.dumps(line) + '\n')
+
+    os.rename(grouped_path + '.tmp', grouped_path)
+
+    return grouped_path
 
 
 def fixed_hash(value):
