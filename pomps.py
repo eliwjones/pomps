@@ -43,7 +43,7 @@ def load_and_transform_source_data(
 
     with open(transformed_path + '.tmp', 'w', encoding='utf-8') as tmpfile, open(source_path, encoding='utf-8') as source:
         for line in source:
-            doc = transform_func(json.loads(line[-1]))
+            doc = transform_func(json.loads(line[:-1]))
             tmpfile.write(json.dumps(doc) + '\n')
 
     os.rename(transformed_path + '.tmp', transformed_path)
@@ -62,12 +62,15 @@ def group_data(source_path, grouped_path, group_key_func, group_buckets):
     if not Path(buckets_path).is_dir():
         tmp_buckets_path = f"{buckets_path}_tmp"
 
-        shutil.rmtree(tmp_buckets_path)
+        shutil.rmtree(tmp_buckets_path, ignore_errors=True)
         Path(tmp_buckets_path).mkdir(parents=True, exist_ok=True)
 
         with open(source_path, encoding='utf-8') as source:
             for line in source:
-                group_key = group_key_func(json.loads(line[-1]))
+                if line[:-1] != '\n':
+                    line += '\n'
+
+                group_key = group_key_func(json.loads(line[:-1]))
                 bucket = str(fixed_hash(group_key) % group_buckets).zfill(len(str(group_buckets)))
                 bucket_path = f"{tmp_buckets_path}/{bucket}.jsonl"
 
@@ -76,14 +79,17 @@ def group_data(source_path, grouped_path, group_key_func, group_buckets):
 
         shutil.move(tmp_buckets_path, buckets_path)
 
-    os.remove(grouped_path + '.tmp')
+    Path(grouped_path + '.tmp').unlink(missing_ok=True)
 
     for bucket_path in glob.glob(f"{buckets_path}/*"):
         grouped_data = {}
 
         with open(bucket_path, encoding='utf-8') as b:
             for line in b:
-                data = json.loads(line[-1])
+                if line == '\n':
+                    continue
+
+                data = json.loads(line[:-1])
                 group_key = group_key_func(data)
 
                 if group_key not in grouped_data:
@@ -91,7 +97,7 @@ def group_data(source_path, grouped_path, group_key_func, group_buckets):
 
                 grouped_data[group_key].append(data)
 
-        with open(grouped_path + '.tmp', 'a', encoding='utf-8') as tmpfile:
+        with open(grouped_path + '.tmp', 'a+', encoding='utf-8') as tmpfile:
             for group_key in grouped_data:
                 line = {'group_key': group_key, 'data': grouped_data[group_key]}
                 tmpfile.write(json.dumps(line) + '\n')

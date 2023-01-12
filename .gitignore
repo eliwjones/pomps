@@ -2,3 +2,6 @@
 hialeah.py
 
 venv
+data
+
+__pycache__
