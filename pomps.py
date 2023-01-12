@@ -94,7 +94,7 @@ def group_data(source_path, grouped_path, group_key_func, group_buckets):
 
                 grouped_data[group_key].append(data)
 
-        with open(grouped_path + '.tmp', 'a+', encoding='utf-8') as tmpfile:
+        with open(grouped_path + '.tmp', 'a', encoding='utf-8') as tmpfile:
             for group_key in grouped_data:
                 line = {'group_key': group_key, 'data': grouped_data[group_key]}
                 tmpfile.write(json.dumps(line) + '\n')
