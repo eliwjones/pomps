@@ -4,6 +4,7 @@ import json
 import shutil
 import unittest
 
+from datetime import datetime
 from pathlib import Path
 
 TEST_DATA = './data/test'
@@ -42,6 +43,38 @@ class TestPomps(unittest.TestCase):
         )
 
         self.assertEqual(Path(grouped_path).read_text(), expected)
+
+    def test_load_and_transform_source_data(self):
+        name = 'some_name_for_data'
+
+        def transform_func(data):
+            new_data = {'id': data['_id'], 'name': data['name'].title(), 'classification': data['type'].replace('pimp', 'p*mp')}
+            return new_data
+
+        def load_func(filepath):
+            test_jsonl = [
+                {'_id': 0, 'name': 'robert smith', 'type': 'pimp'},
+                {'_id': 2, 'name': 'joe j', 'type': 'player'},
+                {'_id': 1, 'name': 'bill b', 'type': 'witness'},
+            ]
+
+            Path(filepath).parent.mkdir(parents=True, exist_ok=True)
+            Path(filepath).write_text('\n'.join(map(json.dumps, test_jsonl)))
+
+        transformed_path = pomps.load_and_transform_source_data(
+            name, transform_func, load_func, env='testing', execution_date=datetime.now(), root_dir=TEST_DATA
+        )
+
+        expected = '\n'.join(
+            [
+                json.dumps({'id': 0, 'name': 'Robert Smith', 'classification': 'p*mp'}),
+                json.dumps({'id': 2, 'name': 'Joe J', 'classification': 'player'}),
+                json.dumps({'id': 1, 'name': 'Bill B', 'classification': 'witness'}),
+                ''
+            ]
+        )
+
+        self.assertEqual(Path(transformed_path).read_text(), expected)
 
 
 if __name__ == '__main__':
