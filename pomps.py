@@ -43,7 +43,7 @@ def load_and_transform_source_data(
 
     with open(transformed_path + '.tmp', 'w', encoding='utf-8') as tmpfile, open(source_path, encoding='utf-8') as source:
         for line in source:
-            doc = transform_func(json.loads(line[:-1]))
+            doc = transform_func(json.loads(line.rstrip()))
             tmpfile.write(json.dumps(doc) + '\n')
 
     os.rename(transformed_path + '.tmp', transformed_path)
@@ -67,10 +67,7 @@ def group_data(source_path, grouped_path, group_key_func, group_buckets):
 
         with open(source_path, encoding='utf-8') as source:
             for line in source:
-                if line[:-1] != '\n':
-                    line += '\n'
-
-                group_key = group_key_func(json.loads(line[:-1]))
+                group_key = group_key_func(json.loads(line.rstrip()))
                 bucket = str(fixed_hash(group_key) % group_buckets).zfill(len(str(group_buckets)))
                 bucket_path = f"{tmp_buckets_path}/{bucket}.jsonl"
 
@@ -89,7 +86,7 @@ def group_data(source_path, grouped_path, group_key_func, group_buckets):
                 if line == '\n':
                     continue
 
-                data = json.loads(line[:-1])
+                data = json.loads(line.rstrip())
                 group_key = group_key_func(data)
 
                 if group_key not in grouped_data:
