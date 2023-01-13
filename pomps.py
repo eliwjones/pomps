@@ -40,15 +40,25 @@ def load_and_transform_source_data(name, transform_func, load_func, env, executi
     return transformed_path
 
 
-def group_data(source_path, group_key_func, group_buckets):
+def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
     """
     TODO: group_buckets number should be calculated in here based on Available RAM and source_path file_size.
     """
 
     source_filename = source_path.split('/')[-1]
-    grouped_path = source_path.replace(source_filename, 'grouped_source_data.jsonl')
+
+    """
+      Feels a little funky using this group_by_name.  It is a workaround for calling group_data on multiple
+      source_path files in the same parent folder.
+
+      TODO: Ponder the cleaner way.
+    """
+    if group_by_name:
+        group_by_name += '/'
+    grouped_path = source_path.replace(source_filename, f"{group_by_name}grouped_source_data.jsonl")
 
     if Path(grouped_path).is_file():
+        print(f"[group_data] found existing data, returning: {grouped_path}")
         return grouped_path
 
     """
@@ -203,7 +213,7 @@ def merge_data_sources(data_one_jsonl_path, data_two_jsonl_path, merge_func):
 
         while data_one_batch['group_key'] is not None or data_two_batch['group_key'] is not None:
             if data_one_batch['group_key'] == data_two_batch['group_key']:
-                val = (data_one_batch['group_key'], (data_one_batch['data'], data_two_batch['data']))
+                val = (data_one_batch['group_key'], data_one_batch['data'], data_two_batch['data'])
                 emit_json = [json.dumps(line) + '\n' for line in merge_func(val)]
 
                 emit_count = len(emit_json)
@@ -223,7 +233,7 @@ def merge_data_sources(data_one_jsonl_path, data_two_jsonl_path, merge_func):
                 knowable max str value.
                 """
 
-                val = (data_one_batch['group_key'], (data_one_batch['data'], []))
+                val = (data_one_batch['group_key'], data_one_batch['data'], [])
                 emit_json = [json.dumps(line) + '\n' for line in merge_func(val)]
 
                 emit_count = len(emit_json)
@@ -234,7 +244,7 @@ def merge_data_sources(data_one_jsonl_path, data_two_jsonl_path, merge_func):
 
                 data_one_batch = load_line(data_one)
             else:
-                val = (data_two_batch['group_key'], ([], data_two_batch['data']))
+                val = (data_two_batch['group_key'], [], data_two_batch['data'])
                 emit_json = [json.dumps(line) + '\n' for line in merge_func(val)]
 
                 emit_count = len(emit_json)
