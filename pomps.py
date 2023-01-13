@@ -202,15 +202,51 @@ def merge_data_sources(data_one_jsonl_path, data_two_jsonl_path, merge_func):
         data_two_batch = load_line(data_two)
 
         while data_one_batch['group_key'] is not None or data_two_batch['group_key'] is not None:
-            """
-            TODO: this merging method requires we sourt data by 'group_key'
-              Also, using None as tombstone won't really work.. and sys.maxsize won't work with the current
-              fixed_hash() implementation that using sha512 and etc...
+            if data_one_batch['group_key'] == data_two_batch['group_key']:
+                val = (data_one_batch['group_key'], (data_one_batch['data'], data_two_batch['data']))
+                emit_json = [json.dumps(line) + '\n' for line in merge_func(val)]
 
-              Either, we make fixed_hash() more like pyspark's portable_hash and maybe get to use maxsize OR we think more.
-            """
-            if data_two_batch['group_key'] is not None or data:
-                pass
+                emit_count = len(emit_json)
+
+                counter += emit_count
+                merge_count += emit_count
+
+                output.writelines(emit_json)
+
+                data_one_batch = load_line(data_one)
+                data_two_batch = load_line(data_two)
+            elif data_two_batch['group_key'] is None or (
+                data_one_batch['group_key'] and (data_one_batch['group_key'] < data_two_batch['group_key'])
+            ):
+                """
+                This is a pitiable logic check.. which would be simpler with a max value.. but.. we can have no
+                knowable max str value.
+                """
+
+                val = (data_one_batch['group_key'], (data_one_batch['data'], []))
+                emit_json = [json.dumps(line) + '\n' for line in merge_func(val)]
+
+                emit_count = len(emit_json)
+
+                counter += emit_count
+
+                output.writelines(emit_json)
+
+                data_one_batch = load_line(data_one)
+            else:
+                val = (data_two_batch['group_key'], ([], data_two_batch['data']))
+                emit_json = [json.dumps(line) + '\n' for line in merge_func(val)]
+
+                emit_count = len(emit_json)
+
+                counter += emit_count
+
+                output.writelines(emit_json)
+
+                data_two_batch = load_line(data_two)
+
+            if not counter % 100_000:
+                print(f"[merge_data_sources] counter: {counter}, merge_count: {merge_count}")
 
         shutil.move(workfile, merged_jsonl_path)
 
