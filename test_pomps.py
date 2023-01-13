@@ -30,8 +30,7 @@ class TestPomps(unittest.TestCase):
         def group_key_func(data):
             return str(data['_id'])
 
-        grouped_path = f"{TEST_DATA}/grouped_test.jsonl"
-        pomps.group_data(source_path=jsonl_path, grouped_path=grouped_path, group_key_func=group_key_func, group_buckets=2)
+        grouped_path = pomps.group_data(source_path=jsonl_path, group_key_func=group_key_func, group_buckets=2)
 
         expected = '\n'.join(
             [

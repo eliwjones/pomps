@@ -26,9 +26,7 @@ def load_and_transform_source_data(name, transform_func, load_func, env, executi
         os.rename(source_path + '.tmp', source_path)
 
     if group_key_func:
-        grouped_path = f"{namespace}/{name}/grouped_source_data.jsonl"
-        if not Path(grouped_path).is_file():
-            group_data(source_path, grouped_path, group_key_func, group_buckets)
+        grouped_path = group_data(source_path, group_key_func, group_buckets)
 
         source_path = grouped_path
 
@@ -42,11 +40,13 @@ def load_and_transform_source_data(name, transform_func, load_func, env, executi
     return transformed_path
 
 
-def generate_sorted_join_key_index(data_path):
-    pass
-
-
-def group_data(source_path, grouped_path, group_key_func, group_buckets):
+def group_data(source_path, group_key_func, group_buckets):
+    source_filename = source_path.split('/')[-1]
+    grouped_path = source_path.replace(source_filename, 'grouped_source_data.jsonl')
+    
+    if Path(grouped_path).is_file():
+        return grouped_path
+    
     grouped_file = grouped_path.split('/')[-1]
     buckets_path = grouped_path.replace(grouped_file, 'buckets')
 
@@ -73,7 +73,7 @@ def group_data(source_path, grouped_path, group_key_func, group_buckets):
 
     Path(grouped_path + '.tmp').unlink(missing_ok=True)
 
-    for bucket_path in glob.glob(f"{buckets_path}/*"):
+    for bucket_path in glob.glob(f"{buckets_path}/*.jsonl"):
         grouped_data = {}
 
         with open(bucket_path, encoding='utf-8') as b:
