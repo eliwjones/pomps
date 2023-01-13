@@ -174,12 +174,14 @@ class TestPomps(unittest.TestCase):
             new_data = {'control_number': data['control_num'], 'name': data['name'].title(), 'address': data['address']}
             return new_data
 
+        execution_date = datetime.now()
+
         transformed_path_one = pomps.load_and_transform_source_data(
             name='data_one',
             transform_func=transform_func_one,
             load_func=load_func_one,
             env='testing',
-            execution_date=datetime.now(),
+            execution_date=execution_date,
             root_dir=TEST_DATA,
             group_key_func=group_key_func_one,
             group_buckets=2,
@@ -190,11 +192,9 @@ class TestPomps(unittest.TestCase):
             transform_func=transform_func_two,
             load_func=load_func_two,
             env='testing',
-            execution_date=datetime.now(),
+            execution_date=execution_date,
             root_dir=TEST_DATA,
         )
-
-        print(f"\ntransformed_path_one: {transformed_path_one}\ntransformed_path_two: {transformed_path_two}")
 
         """ Create grouped, sorted indexes """
 
@@ -204,8 +204,6 @@ class TestPomps(unittest.TestCase):
         sorted_index_two = pomps.group_data(
             source_path=transformed_path_two, group_key_func=lambda x: x['name'], group_buckets=2, group_by_name='_by_name'
         )
-
-        print(f"sorted_index_one: {sorted_index_one}\nsorted_index_two: {sorted_index_two}")
 
         """ merge """
 
