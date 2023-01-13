@@ -35,9 +35,18 @@ class TestPomps(unittest.TestCase):
 
         expected = '\n'.join(
             [
-                '{"group_key": "0", "data": [{"_id": 0, "name": "bob smith", "type": "player"}, {"_id": 0, "name": "robert smith", "type": "pimp"}, {"_id": 0, "name": "rsmith", "type": "witness"}]}',
-                '{"group_key": "2", "data": [{"_id": 2, "name": "joe j", "type": "player"}]}',
-                '{"group_key": "1", "data": [{"_id": 1, "name": "bill b", "type": "witness"}]}',
+                json.dumps(
+                    {
+                        'group_key': '0',
+                        'data': [
+                            {'_id': 0, 'name': 'bob smith', 'type': 'player'},
+                            {'_id': 0, 'name': 'robert smith', 'type': 'pimp'},
+                            {'_id': 0, 'name': 'rsmith', 'type': 'witness'},
+                        ],
+                    }
+                ),
+                json.dumps({'group_key': '1', 'data': [{'_id': 1, 'name': 'bill b', 'type': 'witness'}]}),
+                json.dumps({'group_key': '2', 'data': [{'_id': 2, 'name': 'joe j', 'type': 'player'}]}),
                 '',
             ]
         )
@@ -117,8 +126,8 @@ class TestPomps(unittest.TestCase):
         expected = '\n'.join(
             [
                 json.dumps({'id': 0, 'names': ['Bob Smith', 'Robert Smith', 'Rsmith'], 'classifications': ['player', 'p*mp', 'witness']}),
-                json.dumps({'id': 2, 'names': ['Joe J'], 'classifications': ['player']}),
                 json.dumps({'id': 1, 'names': ['Bill B'], 'classifications': ['witness']}),
+                json.dumps({'id': 2, 'names': ['Joe J'], 'classifications': ['player']}),
                 '',
             ]
         )

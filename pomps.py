@@ -63,10 +63,14 @@ def group_data(source_path, grouped_path, group_key_func, group_buckets):
         shutil.rmtree(tmp_buckets_path, ignore_errors=True)
         Path(tmp_buckets_path).mkdir(parents=True, exist_ok=True)
 
+        sorted_keys = get_and_sort_keys(jsonl_path=source_path, key_func=group_key_func)
+        bucket_map = generate_bucket_map(keys=sorted_keys, buckets=group_buckets)
+
         with open(source_path, encoding='utf-8') as source:
             for line in source:
                 group_key = group_key_func(json.loads(line.rstrip()))
-                bucket = str(fixed_hash(group_key) % group_buckets).zfill(len(str(group_buckets)))
+
+                bucket = get_bucket(key=group_key, bucket_map=bucket_map)
                 bucket_path = f"{tmp_buckets_path}/{bucket}.jsonl"
 
                 with open(bucket_path, 'a', encoding='utf-8') as f:
@@ -92,8 +96,9 @@ def group_data(source_path, grouped_path, group_key_func, group_buckets):
 
                 grouped_data[group_key].append(data)
 
+        sorted_keys = sorted(grouped_data.keys())
         with open(grouped_path + '.tmp', 'a', encoding='utf-8') as tmpfile:
-            for group_key in grouped_data:
+            for group_key in sorted_keys:
                 line = {'group_key': group_key, 'data': grouped_data[group_key]}
                 tmpfile.write(json.dumps(line) + '\n')
 
@@ -109,6 +114,103 @@ def fixed_hash(value):
         raise Exception(f"[fixed_hash] we expect string values.  Neither ints nor None allowed.  value: {value}")
 
     return int(hashlib.sha512(value.encode('utf-8')).hexdigest(), 16)
+
+
+def generate_bucket_map(keys, buckets):
+    size = len(keys) // buckets
+    bucket_map = {}
+
+    start, end, counter, skip_key = None, None, 0, None
+    for key in keys:
+        if key == skip_key:
+            continue
+
+        counter += 1
+        end = key
+        if start is None:
+            start = key
+
+        if counter != size:
+            continue
+
+        if start == end:
+            """
+            We have a hot key that filled up an entire bucket.  To reflect the reality that this bucket will get all of these
+            keys, we shall skip until the next key is found.
+            """
+            skip_key = end
+
+        bucket_map[f"{start}_{end}"] = (start, end)
+        start, end, counter = None, None, 0
+
+    if counter != size and start and end:
+        bucket_map[f"{start}_{end}"] = (start, end)
+
+    return bucket_map
+
+
+def get_bucket(key, bucket_map):
+    for bucket in bucket_map:
+        if bucket_map[bucket][0] <= key <= bucket_map[bucket][1]:
+            return bucket
+
+    raise Exception(f"[get_bucket] key: {key}  We created a bucket_map that does not know what to do with our key!")
+
+
+def get_and_sort_keys(jsonl_path, key_func):
+    keys = []
+    with open(jsonl_path, encoding='utf-8') as source:
+        for line in source:
+            line = line.rstrip()
+            if not line:
+                continue
+
+            keys.append(str(key_func(json.loads(line))))
+
+    return sorted(keys)
+
+
+def load_line(f):
+    batch = {'group_key': None, 'data': []}
+    line = f.readline()
+    if line:
+        batch = json.loads(line[:-1])
+    return batch
+
+
+def merge_data_sources(data_one_jsonl_path, data_two_jsonl_path, merge_func):
+    merged_jsonl_path = data_two_jsonl_path.replace('.jsonl', '-merged_data.jsonl')
+
+    if Path(merged_jsonl_path).is_file():
+        return merged_jsonl_path
+
+    counter = 0
+    data_one_orphans = 0
+    data_two_orphans = 0
+    merge_count = 0
+
+    workfile = f"{merged_jsonl_path}.tmp"
+    with open(data_one_jsonl_path, encoding='utf-8') as data_one, open(data_two_jsonl_path, encoding='utf-8') as data_two, open(
+        workfile, 'w', encoding='utf-8'
+    ) as output:
+
+        data_one_batch = load_line(data_one)
+        data_two_batch = load_line(data_two)
+
+        while data_one_batch['group_key'] is not None or data_two_batch['group_key'] is not None:
+            """
+            TODO: this merging method requires we sourt data by 'group_key'
+              Also, using None as tombstone won't really work.. and sys.maxsize won't work with the current
+              fixed_hash() implementation that using sha512 and etc...
+
+              Either, we make fixed_hash() more like pyspark's portable_hash and maybe get to use maxsize OR we think more.
+            """
+            if data_two_batch['group_key'] is not None or data:
+                pass
+
+        shutil.move(workfile, merged_jsonl_path)
+
+    return merged_jsonl_path
 
 
 def serialize_execution_date(execution_date):
