@@ -82,7 +82,7 @@ def group_data(source_path, group_key_func, group_buckets):
     buckets = [source_path]
     if group_buckets > 1:
         buckets = glob.glob(f"{buckets_path}/*.jsonl")
-        buckets = sorted(buckets, key=lambda x: x.split('_'))
+        buckets = sorted(buckets, key=lambda x: x.split('/')[-1].replace('.jsonl', '').split('_'))
 
     for bucket_path in buckets:
         grouped_data = {}
