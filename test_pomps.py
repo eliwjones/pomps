@@ -134,6 +134,7 @@ class TestPomps(unittest.TestCase):
         self.assertEqual(Path(transformed_path).read_text(), expected)
 
     def test_merge_data_sources(self):
+        self.maxDiff = None
         """Load two data sets."""
 
         def load_func_one(filepath):
@@ -215,6 +216,7 @@ class TestPomps(unittest.TestCase):
                     if 'address' not in doc_one:
                         doc_one['address'] = []
                     doc_one['address'].append(doc_two['address'])
+                    doc_one['control_number'] = doc_two['control_number']
 
                 data.append(doc_one)
 
@@ -227,7 +229,14 @@ class TestPomps(unittest.TestCase):
         expected = '\n'.join(
             [
                 json.dumps(
-                    {'id': 1, 'name': 'Bill B', 'names': ['Bill B'], 'classifications': ['witness'], 'address': ['111 Avenue Ave, NY, NY']}
+                    {
+                        'id': 1,
+                        'name': 'Bill B',
+                        'names': ['Bill B'],
+                        'classifications': ['witness'],
+                        'address': ['111 Avenue Ave, NY, NY'],
+                        'control_number': 'C7',
+                    }
                 ),
                 json.dumps(
                     {
@@ -236,10 +245,18 @@ class TestPomps(unittest.TestCase):
                         'names': ['Bob Smith', 'Robert Smith', 'Rsmith'],
                         'classifications': ['player', 'p*mp', 'witness'],
                         'address': ['123 Street St, California, CA'],
+                        'control_number': 'A21',
                     }
                 ),
                 json.dumps(
-                    {'id': 2, 'name': 'Joe J', 'names': ['Joe J'], 'classifications': ['player'], 'address': ['321 Road Rd, Texas, TX']}
+                    {
+                        'id': 2,
+                        'name': 'Joe J',
+                        'names': ['Joe J'],
+                        'classifications': ['player'],
+                        'address': ['321 Road Rd, Texas, TX'],
+                        'control_number': 'B33',
+                    }
                 ),
                 '',
             ]
