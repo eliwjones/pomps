@@ -51,8 +51,6 @@ def group_data(source_path, group_key_func, group_buckets):
     if Path(grouped_path).is_file():
         return grouped_path
 
-    buckets = [source_path]
-
     """
     If group_buckets > 1, we will generate all of our buckets and assign them to the buckets var.
     """
@@ -79,14 +77,12 @@ def group_data(source_path, group_key_func, group_buckets):
 
         shutil.move(tmp_buckets_path, buckets_path)
 
-        buckets = glob.glob(f"{buckets_path}/*.jsonl")
-
-        """
-          We lexically sort our bucket paths so we append in sorted order as well.
-        """
-        buckets = sorted(buckets, key=lambda x: x.split('_'))
-
     Path(grouped_path + '.tmp').unlink(missing_ok=True)
+
+    buckets = [source_path]
+    if group_buckets > 1:
+        buckets = glob.glob(f"{buckets_path}/*.jsonl")
+        buckets = sorted(buckets, key=lambda x: x.split('_'))
 
     for bucket_path in buckets:
         grouped_data = {}
