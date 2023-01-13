@@ -7,13 +7,6 @@ from pathlib import Path
 
 
 def load_and_transform_source_data(name, transform_func, load_func, env, execution_date, root_dir, group_key_func=None, group_buckets=10):
-    """
-    TODO: One might wish to group source_data, depending on its structure.  We would, of course, like to avoid
-      this if at all possible since it requires slurping all data into RAM, unless one implements a scatter
-      algorithm to bucket lines by group_key before grouping in batches.
-
-    TODO: Feels like we will need to do this because grouping is just a fact of life later in the process.
-    """
     namespace = f"{root_dir}/{env}/{serialize_execution_date(execution_date)}"
 
     source_path = f"{namespace}/{name}/source_data.jsonl"
