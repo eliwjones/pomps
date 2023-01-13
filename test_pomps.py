@@ -16,9 +16,9 @@ class TestPomps(unittest.TestCase):
 
     def test_group_data(self):
         test_jsonl = [
+            {'_id': 2, 'name': 'joe j', 'type': 'player'},
             {'_id': 0, 'name': 'bob smith', 'type': 'player'},
             {'_id': 0, 'name': 'robert smith', 'type': 'pimp'},
-            {'_id': 2, 'name': 'joe j', 'type': 'player'},
             {'_id': 1, 'name': 'bill b', 'type': 'witness'},
             {'_id': 0, 'name': 'rsmith', 'type': 'witness'},
         ]
@@ -30,27 +30,27 @@ class TestPomps(unittest.TestCase):
         def group_key_func(data):
             return str(data['_id'])
 
-        grouped_path = pomps.group_data(source_path=jsonl_path, group_key_func=group_key_func, group_buckets=2)
+        for group_buckets in [1, 2]:
+            grouped_path = pomps.group_data(source_path=jsonl_path, group_key_func=group_key_func, group_buckets=group_buckets)
+            expected = '\n'.join(
+                [
+                    json.dumps(
+                        {
+                            'group_key': '0',
+                            'data': [
+                                {'_id': 0, 'name': 'bob smith', 'type': 'player'},
+                                {'_id': 0, 'name': 'robert smith', 'type': 'pimp'},
+                                {'_id': 0, 'name': 'rsmith', 'type': 'witness'},
+                            ],
+                        }
+                    ),
+                    json.dumps({'group_key': '1', 'data': [{'_id': 1, 'name': 'bill b', 'type': 'witness'}]}),
+                    json.dumps({'group_key': '2', 'data': [{'_id': 2, 'name': 'joe j', 'type': 'player'}]}),
+                    '',
+                ]
+            )
 
-        expected = '\n'.join(
-            [
-                json.dumps(
-                    {
-                        'group_key': '0',
-                        'data': [
-                            {'_id': 0, 'name': 'bob smith', 'type': 'player'},
-                            {'_id': 0, 'name': 'robert smith', 'type': 'pimp'},
-                            {'_id': 0, 'name': 'rsmith', 'type': 'witness'},
-                        ],
-                    }
-                ),
-                json.dumps({'group_key': '1', 'data': [{'_id': 1, 'name': 'bill b', 'type': 'witness'}]}),
-                json.dumps({'group_key': '2', 'data': [{'_id': 2, 'name': 'joe j', 'type': 'player'}]}),
-                '',
-            ]
-        )
-
-        self.assertEqual(Path(grouped_path).read_text(), expected)
+            self.assertEqual(Path(grouped_path).read_text(), expected, f"Failed for group_buckets={group_buckets}")
 
     def test_load_and_transform_source_data(self):
         name = 'some_name_for_data'

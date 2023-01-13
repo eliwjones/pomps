@@ -41,16 +41,24 @@ def load_and_transform_source_data(name, transform_func, load_func, env, executi
 
 
 def group_data(source_path, group_key_func, group_buckets):
+    """
+    TODO: group_buckets number should be calculated in here based on Available RAM and source_path file_size.
+    """
+
     source_filename = source_path.split('/')[-1]
     grouped_path = source_path.replace(source_filename, 'grouped_source_data.jsonl')
-    
+
     if Path(grouped_path).is_file():
         return grouped_path
-    
+
+    buckets = [source_path]
+
+    """
+    If group_buckets > 1, we will generate all of our buckets and assign them to the buckets var.
+    """
     grouped_file = grouped_path.split('/')[-1]
     buckets_path = grouped_path.replace(grouped_file, 'buckets')
-
-    if not Path(buckets_path).is_dir():
+    if group_buckets > 1 and not Path(buckets_path).is_dir():
         tmp_buckets_path = f"{buckets_path}_tmp"
 
         shutil.rmtree(tmp_buckets_path, ignore_errors=True)
@@ -71,9 +79,16 @@ def group_data(source_path, group_key_func, group_buckets):
 
         shutil.move(tmp_buckets_path, buckets_path)
 
+        buckets = glob.glob(f"{buckets_path}/*.jsonl")
+
+        """
+          We lexically sort our bucket paths so we append in sorted order as well.
+        """
+        buckets = sorted(buckets, key=lambda x: x.split('_'))
+
     Path(grouped_path + '.tmp').unlink(missing_ok=True)
 
-    for bucket_path in glob.glob(f"{buckets_path}/*.jsonl"):
+    for bucket_path in buckets:
         grouped_data = {}
 
         with open(bucket_path, encoding='utf-8') as b:
