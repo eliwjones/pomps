@@ -31,7 +31,9 @@ class TestPomps(unittest.TestCase):
             return str(data['_id'])
 
         for group_buckets in [1, 2]:
-            grouped_path = pomps.group_data(source_path=jsonl_path, group_key_func=group_key_func, group_buckets=group_buckets)
+            grouped_path = pomps.group_data(
+                source_path=jsonl_path, group_key_func=group_key_func, group_buckets=group_buckets, group_by_name='_id'
+            )
             expected = '\n'.join(
                 [
                     json.dumps(
@@ -200,10 +202,10 @@ class TestPomps(unittest.TestCase):
         """ Create grouped, sorted indexes """
 
         sorted_index_one = pomps.group_data(
-            source_path=transformed_path_one, group_key_func=lambda x: x['name'], group_buckets=2, group_by_name='_by_name'
+            source_path=transformed_path_one, group_key_func=lambda x: x['name'], group_buckets=2, group_by_name='name'
         )
         sorted_index_two = pomps.group_data(
-            source_path=transformed_path_two, group_key_func=lambda x: x['name'], group_buckets=2, group_by_name='_by_name'
+            source_path=transformed_path_two, group_key_func=lambda x: x['name'], group_buckets=2, group_by_name='name'
         )
 
         """ merge """

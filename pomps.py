@@ -55,6 +55,9 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
     """
     if group_by_name:
         group_by_name += '/'
+        if group_by_name[0] != '_':
+            group_by_name = '_' + group_by_name
+
     grouped_path = source_path.replace(source_filename, f"{group_by_name}grouped_source_data.jsonl")
 
     if Path(grouped_path).is_file():
