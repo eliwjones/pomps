@@ -17,7 +17,7 @@ def load_and_transform_source_data(name, transform_func, load_func, env, executi
     if Path(transformed_path).is_file():
         print(f"[load_source_data] data already loaded and transformed.  Returning: {transformed_path}")
 
-        return transformed_path
+        return transformed_path, namespace
 
     if not Path(source_path).is_file():
         print(f"[load_source_data] source data '{source_path}' not yet loaded, retrieving it using provided load_func().")
@@ -37,7 +37,7 @@ def load_and_transform_source_data(name, transform_func, load_func, env, executi
 
     os.rename(transformed_path + '.tmp', transformed_path)
 
-    return transformed_path
+    return transformed_path, namespace
 
 
 def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
@@ -59,6 +59,7 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
             group_by_name = '_' + group_by_name
 
     grouped_path = source_path.replace(source_filename, f"{group_by_name}grouped_source_data.jsonl")
+    Path(grouped_path).parent.mkdir(parents=True, exist_ok=True)
 
     if Path(grouped_path).is_file():
         print(f"[group_data] found existing data, returning: {grouped_path}")
@@ -195,8 +196,9 @@ def load_line(f):
     return batch
 
 
-def merge_data_sources(data_one_jsonl_path, data_two_jsonl_path, merge_func):
-    merged_jsonl_path = data_two_jsonl_path.replace('.jsonl', '-merged_data.jsonl')
+def merge_data_sources(name, namespace, data_one_jsonl_path, data_two_jsonl_path, merge_func):
+    merged_jsonl_path = f"{namespace}/{name}/merged.jsonl"
+    Path(merged_jsonl_path).parent.mkdir(parents=True, exist_ok=True)
 
     if Path(merged_jsonl_path).is_file():
         return merged_jsonl_path

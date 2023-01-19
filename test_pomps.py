@@ -71,7 +71,7 @@ class TestPomps(unittest.TestCase):
             Path(filepath).parent.mkdir(parents=True, exist_ok=True)
             Path(filepath).write_text('\n'.join(map(json.dumps, test_jsonl)))
 
-        transformed_path = pomps.load_and_transform_source_data(
+        transformed_path, _ = pomps.load_and_transform_source_data(
             name, transform_func, load_func, env='testing', execution_date=datetime.now(), root_dir=TEST_DATA
         )
 
@@ -113,7 +113,7 @@ class TestPomps(unittest.TestCase):
         def group_key_func(data):
             return str(data['_id'])
 
-        transformed_path = pomps.load_and_transform_source_data(
+        transformed_path, _ = pomps.load_and_transform_source_data(
             name,
             transform_func,
             load_func,
@@ -179,7 +179,7 @@ class TestPomps(unittest.TestCase):
 
         execution_date = datetime.now()
 
-        transformed_path_one = pomps.load_and_transform_source_data(
+        transformed_path_one, namespace = pomps.load_and_transform_source_data(
             name='data_one',
             transform_func=transform_func_one,
             load_func=load_func_one,
@@ -190,7 +190,7 @@ class TestPomps(unittest.TestCase):
             group_buckets=2,
         )
 
-        transformed_path_two = pomps.load_and_transform_source_data(
+        transformed_path_two, _ = pomps.load_and_transform_source_data(
             name='data_two',
             transform_func=transform_func_two,
             load_func=load_func_two,
@@ -225,7 +225,11 @@ class TestPomps(unittest.TestCase):
             return data
 
         merged_jsonl_path = pomps.merge_data_sources(
-            data_one_jsonl_path=sorted_index_one, data_two_jsonl_path=sorted_index_two, merge_func=merge_func
+            name='one_and_two',
+            namespace=namespace,
+            data_one_jsonl_path=sorted_index_one,
+            data_two_jsonl_path=sorted_index_two,
+            merge_func=merge_func,
         )
 
         expected = '\n'.join(
