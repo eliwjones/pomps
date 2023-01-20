@@ -259,6 +259,7 @@ def merge_data_sources(name, namespace, data_one_jsonl_path, data_two_jsonl_path
         data_two_batch = load_line(data_two)
 
         while data_one_batch['group_key'] is not None or data_two_batch['group_key'] is not None:
+            emit_json = []
             if data_one_batch['group_key'] == data_two_batch['group_key']:
                 val = (data_one_batch['group_key'], data_one_batch['data'], data_two_batch['data'])
                 emit_json = [json.dumps(line) + '\n' for line in merge_func(val)]
@@ -305,7 +306,7 @@ def merge_data_sources(name, namespace, data_one_jsonl_path, data_two_jsonl_path
 
                 data_two_batch = load_line(data_two)
 
-            if not counter % DEBUG_MODULUS:
+            if emit_json and not counter % DEBUG_MODULUS:
                 print(f"[merge_data_sources] counter: {counter}, merge_count: {merge_count} for {merged_jsonl_path}")
 
     Path(workfile).rename(merged_jsonl_path)
