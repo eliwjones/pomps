@@ -23,7 +23,7 @@ def load_and_transform_source_data(name, namespace, transform_func, load_func, g
         print(f"[load_source_data] source data '{source_path}' not yet loaded, retrieving it using provided load_func().")
 
         load_func(filepath=source_path + '.tmp')
-        os.rename(source_path + '.tmp', source_path)
+        Path(source_path + '.tmp').rename(source_path)
 
     if group_key_func:
         grouped_path = group_data(source_path, group_key_func, group_buckets)
@@ -40,7 +40,7 @@ def load_and_transform_source_data(name, namespace, transform_func, load_func, g
             if not counter % DEBUG_MODULUS:
                 print(f"[load_and_transform_source_data] transformed {counter} docs.")
 
-    os.rename(transformed_path + '.tmp', transformed_path)
+    Path(transformed_path + '.tmp').rename(transformed_path)
 
     return transformed_path
 
@@ -101,7 +101,7 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
                 if not counter % DEBUG_MODULUS:
                     print(f"[group_data] bucketed {counter} docs from source_path: {source_path}.")
 
-        shutil.move(tmp_buckets_path, buckets_path)
+        Path(tmp_buckets_path).replace(buckets_path)
 
     Path(grouped_path + '.tmp').unlink(missing_ok=True)
 
@@ -142,7 +142,7 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
                 if not write_counter % DEBUG_MODULUS:
                     print(f"[group_data] written {write_counter} groups to {grouped_path}.tmp")
 
-    os.rename(grouped_path + '.tmp', grouped_path)
+    Path(grouped_path + '.tmp').rename(grouped_path)
 
     return grouped_path
 
@@ -293,7 +293,7 @@ def merge_data_sources(name, namespace, data_one_jsonl_path, data_two_jsonl_path
             if not counter % DEBUG_MODULUS:
                 print(f"[merge_data_sources] counter: {counter}, merge_count: {merge_count} for {merged_jsonl_path}")
 
-        shutil.move(workfile, merged_jsonl_path)
+    Path(workfile).rename(merged_jsonl_path)
 
     return merged_jsonl_path
 
