@@ -84,21 +84,21 @@ def transform_name_basics(doc):
 execution_date = datetime.strptime('20230118-120000-000000', '%Y%m%d-%H%M%S-%f')
 namespace = pomps.namespace(root_dir=DATA_DIR, env=ENV, execution_date=execution_date)
 
-title_principals, namespace = pomps.load_and_transform_source_data(
+title_principals = pomps.load_and_transform_source_data(
     name='title_principals',
     namespace=namespace,
     transform_func=transform_title_principals,
     load_func=load_imdb_data_func('https://datasets.imdbws.com/title.principals.tsv.gz'),
 )
 
-title_basics, _ = pomps.load_and_transform_source_data(
+title_basics = pomps.load_and_transform_source_data(
     name='title_basics',
     namespace=namespace,
     transform_func=transform_title_basics,
     load_func=load_imdb_data_func('https://datasets.imdbws.com/title.basics.tsv.gz'),
 )
 
-name_basics, _ = pomps.load_and_transform_source_data(
+name_basics = pomps.load_and_transform_source_data(
     name='name_basics',
     namespace=namespace,
     transform_func=transform_name_basics,
