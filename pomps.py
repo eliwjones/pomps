@@ -86,20 +86,35 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
 
         print(f"[group_data] bucket_map: {bucket_map}")
 
-        with open(source_path, encoding='utf-8') as source:
-            counter = 0
-            for line in source:
-                counter += 1
-                group_key = group_key_func(json.loads(line.rstrip()))
+        bucket_file_handles = {}
 
-                bucket = get_bucket(key=group_key, bucket_map=bucket_map)
+        try:
+            """
+            Generally, we would prefer to just use 'with open()' down where we are doing our
+            'write(line)', but opening a file to append just one line is very slow in Windows.
+
+            Thus, we have optimized to use this dict of open file handles that get closed in the
+            finally block.
+            """
+
+            for bucket in bucket_map:
                 bucket_path = f"{tmp_buckets_path}/{bucket}.jsonl"
+                bucket_file_handles[bucket] = open(bucket_path, 'a', encoding='utf-8')
 
-                with open(bucket_path, 'a', encoding='utf-8') as f:
-                    f.write(line)
+            with open(source_path, encoding='utf-8') as source:
+                counter = 0
+                for line in source:
+                    counter += 1
+                    group_key = group_key_func(json.loads(line.rstrip()))
 
-                if not counter % DEBUG_MODULUS:
-                    print(f"[group_data] bucketed {counter} docs from source_path: {source_path}.")
+                    bucket = get_bucket(key=group_key, bucket_map=bucket_map)
+                    bucket_file_handles[bucket].write(line)
+
+                    if not counter % DEBUG_MODULUS:
+                        print(f"[group_data] bucketed {counter} docs from source_path: {source_path}.")
+        finally:
+            for bucket in bucket_file_handles:
+                bucket_file_handles[bucket].close()
 
         Path(tmp_buckets_path).replace(buckets_path)
 
