@@ -82,32 +82,27 @@ def transform_name_basics(doc):
 
 
 execution_date = datetime.strptime('20230118-120000-000000', '%Y%m%d-%H%M%S-%f')
+namespace = pomps.namespace(root_dir=DATA_DIR, env=ENV, execution_date=execution_date)
 
 title_principals, namespace = pomps.load_and_transform_source_data(
     name='title_principals',
+    namespace=namespace,
     transform_func=transform_title_principals,
     load_func=load_imdb_data_func('https://datasets.imdbws.com/title.principals.tsv.gz'),
-    env=ENV,
-    execution_date=execution_date,
-    root_dir=DATA_DIR,
 )
 
 title_basics, _ = pomps.load_and_transform_source_data(
     name='title_basics',
+    namespace=namespace,
     transform_func=transform_title_basics,
     load_func=load_imdb_data_func('https://datasets.imdbws.com/title.basics.tsv.gz'),
-    env=ENV,
-    execution_date=execution_date,
-    root_dir=DATA_DIR,
 )
 
 name_basics, _ = pomps.load_and_transform_source_data(
     name='name_basics',
+    namespace=namespace,
     transform_func=transform_name_basics,
     load_func=load_imdb_data_func('https://datasets.imdbws.com/name.basics.tsv.gz'),
-    env=ENV,
-    execution_date=execution_date,
-    root_dir=DATA_DIR,
 )
 
 grouped_title_principals = pomps.group_data(
