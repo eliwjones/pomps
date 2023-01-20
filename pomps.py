@@ -6,9 +6,7 @@ import shutil
 from pathlib import Path
 
 
-def load_and_transform_source_data(name, transform_func, load_func, env, execution_date, root_dir, group_key_func=None, group_buckets=10):
-    namespace = f"{root_dir}/{env}/{serialize_execution_date(execution_date)}"
-
+def load_and_transform_source_data(name, namespace, transform_func, load_func, group_key_func=None, group_buckets=10):
     source_path = f"{namespace}/{name}/source_data.jsonl"
     transformed_path = f"{namespace}/{name}/transformed_source_data.jsonl"
 
@@ -37,7 +35,7 @@ def load_and_transform_source_data(name, transform_func, load_func, env, executi
 
     os.rename(transformed_path + '.tmp', transformed_path)
 
-    return transformed_path, namespace
+    return transformed_path
 
 
 def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
@@ -266,6 +264,12 @@ def merge_data_sources(name, namespace, data_one_jsonl_path, data_two_jsonl_path
         shutil.move(workfile, merged_jsonl_path)
 
     return merged_jsonl_path
+
+
+def namespace(root_dir, env, execution_date):
+    namespace = f"{root_dir}/{env}/{serialize_execution_date(execution_date)}"
+
+    return namespace
 
 
 def serialize_execution_date(execution_date):
