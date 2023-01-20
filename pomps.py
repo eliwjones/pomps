@@ -5,6 +5,8 @@ import shutil
 
 from pathlib import Path
 
+DEBUG_MODULUS = 369_369
+
 
 def load_and_transform_source_data(name, namespace, transform_func, load_func, group_key_func=None, group_buckets=10):
     source_path = f"{namespace}/{name}/source_data.jsonl"
@@ -15,7 +17,7 @@ def load_and_transform_source_data(name, namespace, transform_func, load_func, g
     if Path(transformed_path).is_file():
         print(f"[load_source_data] data already loaded and transformed.  Returning: {transformed_path}")
 
-        return transformed_path, namespace
+        return transformed_path
 
     if not Path(source_path).is_file():
         print(f"[load_source_data] source data '{source_path}' not yet loaded, retrieving it using provided load_func().")
@@ -29,9 +31,14 @@ def load_and_transform_source_data(name, namespace, transform_func, load_func, g
         source_path = grouped_path
 
     with open(transformed_path + '.tmp', 'w', encoding='utf-8') as tmpfile, open(source_path, encoding='utf-8') as source:
+        counter = 0
         for line in source:
+            counter += 1
             doc = transform_func(json.loads(line.rstrip()))
             tmpfile.write(json.dumps(doc) + '\n')
+
+            if not counter % DEBUG_MODULUS:
+                print(f"[load_and_transform_source_data] transformed {counter} docs.")
 
     os.rename(transformed_path + '.tmp', transformed_path)
 
@@ -77,8 +84,12 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
         sorted_keys = get_and_sort_keys(jsonl_path=source_path, key_func=group_key_func)
         bucket_map = generate_bucket_map(keys=sorted_keys, buckets=group_buckets)
 
+        print(f"[group_data] bucket_map: {bucket_map}")
+
         with open(source_path, encoding='utf-8') as source:
+            counter = 0
             for line in source:
+                counter += 1
                 group_key = group_key_func(json.loads(line.rstrip()))
 
                 bucket = get_bucket(key=group_key, bucket_map=bucket_map)
@@ -86,6 +97,9 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
 
                 with open(bucket_path, 'a', encoding='utf-8') as f:
                     f.write(line)
+
+                if not counter % DEBUG_MODULUS:
+                    print(f"[group_data] bucketed {counter} docs from source_path: {source_path}.")
 
         shutil.move(tmp_buckets_path, buckets_path)
 
@@ -96,11 +110,14 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
         buckets = glob.glob(f"{buckets_path}/*.jsonl")
         buckets = sorted(buckets, key=lambda x: x.split('/')[-1].replace('.jsonl', '').split('_'))
 
+    write_counter = 0
     for bucket_path in buckets:
         grouped_data = {}
 
         with open(bucket_path, encoding='utf-8') as b:
+            group_counter = 0
             for line in b:
+                group_counter += 1
                 if line == '\n':
                     continue
 
@@ -112,11 +129,18 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
 
                 grouped_data[group_key].append(data)
 
+                if not group_counter % DEBUG_MODULUS:
+                    print(f"[group_data] grouped {group_counter} docs for bucket: {bucket_path}.")
+
         sorted_keys = sorted(grouped_data.keys())
         with open(grouped_path + '.tmp', 'a', encoding='utf-8') as tmpfile:
             for group_key in sorted_keys:
+                write_counter += 1
                 line = {'group_key': group_key, 'data': grouped_data[group_key]}
                 tmpfile.write(json.dumps(line) + '\n')
+
+                if not write_counter % DEBUG_MODULUS:
+                    print(f"[group_data] written {write_counter} groups to {grouped_path}.tmp")
 
     os.rename(grouped_path + '.tmp', grouped_path)
 
@@ -176,12 +200,17 @@ def get_bucket(key, bucket_map):
 def get_and_sort_keys(jsonl_path, key_func):
     keys = []
     with open(jsonl_path, encoding='utf-8') as source:
+        counter = 0
         for line in source:
+            counter += 1
             line = line.rstrip()
             if not line:
                 continue
 
             keys.append(str(key_func(json.loads(line))))
+
+            if not counter % DEBUG_MODULUS:
+                print(f"[get_and_sort_keys] gathered {counter} keys.")
 
     return sorted(keys)
 
@@ -224,7 +253,8 @@ def merge_data_sources(name, namespace, data_one_jsonl_path, data_two_jsonl_path
                 counter += emit_count
                 merge_count += emit_count
 
-                output.writelines(emit_json)
+                if emit_json:
+                    output.writelines(emit_json)
 
                 data_one_batch = load_line(data_one)
                 data_two_batch = load_line(data_two)
@@ -243,7 +273,8 @@ def merge_data_sources(name, namespace, data_one_jsonl_path, data_two_jsonl_path
 
                 counter += emit_count
 
-                output.writelines(emit_json)
+                if emit_json:
+                    output.writelines(emit_json)
 
                 data_one_batch = load_line(data_one)
             else:
@@ -254,12 +285,13 @@ def merge_data_sources(name, namespace, data_one_jsonl_path, data_two_jsonl_path
 
                 counter += emit_count
 
-                output.writelines(emit_json)
+                if emit_json:
+                    output.writelines(emit_json)
 
                 data_two_batch = load_line(data_two)
 
-            if not counter % 100_000:
-                print(f"[merge_data_sources] counter: {counter}, merge_count: {merge_count}")
+            if not counter % DEBUG_MODULUS:
+                print(f"[merge_data_sources] counter: {counter}, merge_count: {merge_count} for {merged_jsonl_path}")
 
         shutil.move(workfile, merged_jsonl_path)
 
