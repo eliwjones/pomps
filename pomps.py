@@ -1,5 +1,6 @@
 import glob
 import json
+import math
 import shutil
 
 from pathlib import Path
@@ -171,7 +172,7 @@ def fixed_hash(value):
 
 
 def generate_bucket_map(keys, buckets):
-    size = len(keys) // buckets
+    size = math.ceil(len(keys) / buckets)
     bucket_map = {}
 
     start, end, counter, skip_key = None, None, 0, None
