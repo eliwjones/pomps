@@ -111,7 +111,7 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
                     bucket_file_handles[bucket].write(line)
 
                     if not counter % DEBUG_MODULUS:
-                        print(f"[group_data] bucketed {counter} docs from source_path: {source_path}.")
+                        print(f"[group_data] bucketed {counter} docs from source_path: {source_path}")
         finally:
             for bucket in bucket_file_handles:
                 bucket_file_handles[bucket].close()
@@ -145,7 +145,7 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
                 grouped_data[group_key].append(data)
 
                 if not group_counter % DEBUG_MODULUS:
-                    print(f"[group_data] grouped {group_counter} docs for bucket: {bucket_path}.")
+                    print(f"[group_data] grouped {group_counter} docs for bucket: {bucket_path}")
 
         sorted_keys = sorted(grouped_data.keys())
         with open(grouped_path + '.tmp', 'a', encoding='utf-8') as tmpfile:
