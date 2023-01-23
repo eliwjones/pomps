@@ -1,7 +1,10 @@
 .idea
-hialeah.py
 
 venv
 data
 
 __pycache__
+
+replit.nix
+pyproject.toml
+.replit
