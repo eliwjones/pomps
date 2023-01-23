@@ -28,3 +28,9 @@ $ git clone git@github.com:eliwjones/pomps.git
 $ cd pomps
 $ python test_pomps.py  # or python example.py if you have ~45 minutes to spare.
 ```
+
+## TODO
+
+The general aim is to keep this as stupidly simple as possible while clearly showing how to transform, group and merge data.
+
+With that said, we are leaving a lot of CPU on the table when grouping and sorting the buckets, so I may add a multiprocessing Pool somewhere in [here](https://github.com/eliwjones/pomps/blob/bbcf534282152a2e000c1003ecf79f4e08794fb2/pomps.py#L129-L158)
