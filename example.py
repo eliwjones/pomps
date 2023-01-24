@@ -1,6 +1,7 @@
 import csv
 import gzip
 import json
+import time
 import urllib.request
 
 from datetime import datetime
@@ -36,7 +37,7 @@ def load_imdb_data_func(url):
                     f.write(json.dumps(new_doc) + '\n')
 
                     counter += 1
-                    if not counter % 100_000:
+                    if not counter % pomps.DEBUG_MODULUS:
                         print(f"[load_imdb_data_func] url: {url}, writing line {counter}")
 
     return func
@@ -81,6 +82,7 @@ def transform_name_basics(doc):
     return new_doc
 
 
+start_time = time.time()
 execution_date = datetime.strptime('20230118-120000-000000', '%Y%m%d-%H%M%S-%f')
 namespace = pomps.namespace(root_dir=DATA_DIR, env=ENV, execution_date=execution_date)
 
@@ -177,3 +179,6 @@ name_data = pomps.merge_data_sources(
     data_two_jsonl_path=grouped_title_data,
     merge_func=name_title_merge_func,
 )
+
+run_time = int(time.time() - start_time)
+print(f"[example] Runtime: {run_time} seconds, {'{0:0.2f}'.format(run_time/60)} minutes")
