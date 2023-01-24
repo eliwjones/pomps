@@ -26,7 +26,7 @@ There are no external dependencies, this is tested on Windows and Linux with Pyt
 ```
 $ git clone git@github.com:eliwjones/pomps.git
 $ cd pomps
-$ python test_pomps.py  # or python example.py if you have ~45 minutes to spare.
+$ python test_pomps.py  # or python example.py if you have ~42 minutes to spare (~23 minutes with pypy)
 ```
 
 ## Features
