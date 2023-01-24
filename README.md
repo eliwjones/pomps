@@ -29,6 +29,12 @@ $ cd pomps
 $ python test_pomps.py  # or python example.py if you have ~45 minutes to spare.
 ```
 
+## Features
+
+Basic resumeability is built in.  If you are in the middle of a large load, merge of multiple datasets and a bug breaks a transform, load or group func, you can fix your bug and just re-run the code using the same namespace, execution_date.  It will pick up where it last left off.
+
+Checks like [this](https://github.com/eliwjones/pomps/blob/8071727d71408182c60cbecb4a853c32e18039b2/pomps.py#L17-L20) or [this](https://github.com/eliwjones/pomps/blob/8071727d71408182c60cbecb4a853c32e18039b2/pomps.py#L69-L71) are what enable this behavior.
+
 ## TODO
 
 The general aim is to keep this as stupidly simple as possible while clearly showing how to transform, group and merge data.
