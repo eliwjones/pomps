@@ -1,4 +1,3 @@
-import glob
 import json
 import math
 import shutil
@@ -122,7 +121,7 @@ def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
 
     buckets = [source_path]
     if group_buckets > 1:
-        buckets = glob.glob(f"{buckets_path}/*.jsonl")
+        buckets = [str(p) for p in Path(buckets_path).glob("*.jsonl")]
         buckets = sorted(buckets, key=lambda x: x.split('/')[-1].replace('.jsonl', '').split('_'))
 
     write_counter = 0
