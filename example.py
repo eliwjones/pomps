@@ -177,4 +177,4 @@ name_data = pomps.merge_data_sources(
 )
 
 run_time = int(time.time() - start_time)
-print(f"[example] Runtime: {run_time} seconds, {'{0:0.2f}'.format(run_time/60)} minutes")
+print(f"[example] Runtime: {run_time} seconds, {run_time/60:.2f} minutes")
