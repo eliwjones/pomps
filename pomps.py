@@ -49,6 +49,7 @@ def load_and_transform_source_data(name, namespace, transform_func, load_func, g
 
 def group_data(source_path, group_key_func, group_by_name=''):
     group_buckets = util.calculate_group_buckets(source_path=source_path)
+    print(f"[group_data] Start available_ram MB: {util.available_ram_bytes()/(1024**2)}")
 
     source_filename = source_path.split('/')[-1]
 
@@ -125,10 +126,12 @@ def group_data(source_path, group_key_func, group_by_name=''):
         buckets = [str(p) for p in Path(buckets_path).glob("*.jsonl")]
         buckets = sorted(buckets, key=lambda x: x.split('/')[-1].replace('.jsonl', '').split('_'))
 
+    print(f"[group_data] Before for buckets - available_ram MB: {util.available_ram_bytes()/(1024**2)}")
     write_counter = 0
     for bucket_path in buckets:
         grouped_data = {}
 
+        print(f"[group_data] bucket: '{bucket_path}', available_ram MB: {util.available_ram_bytes()/(1024**2)}")
         with open(bucket_path, encoding='utf-8') as b:
             group_counter = 0
             for line in b:
@@ -146,8 +149,10 @@ def group_data(source_path, group_key_func, group_by_name=''):
 
                 if not group_counter % DEBUG_MODULUS:
                     print(f"[group_data] grouped {group_counter} docs for bucket: {bucket_path}")
+                    print(f"[group_data] available_ram MB: {util.available_ram_bytes()/(1024**2)}")
 
         sorted_keys = sorted(grouped_data.keys())
+        print(f"[group_data] keys sorted, available_ram MB: {util.available_ram_bytes()/(1024**2)}")
         with open(grouped_path + '.tmp', 'a', encoding='utf-8') as tmpfile:
             for group_key in sorted_keys:
                 write_counter += 1
