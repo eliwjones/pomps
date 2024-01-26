@@ -108,11 +108,11 @@ name_basics = pomps.load_and_transform_source_data(
 )
 
 grouped_title_principals = pomps.group_data(
-    source_path=title_principals, group_key_func=lambda x: x['imdb_tconst'], group_by_name='imdb_tconst', group_buckets=13
+    source_path=title_principals, group_key_func=lambda x: x['imdb_tconst'], group_by_name='imdb_tconst'
 )
 
 grouped_title_basics = pomps.group_data(
-    source_path=title_basics, group_key_func=lambda x: x['imdb_tconst'], group_by_name='imdb_tconst', group_buckets=13
+    source_path=title_basics, group_key_func=lambda x: x['imdb_tconst'], group_by_name='imdb_tconst'
 )
 
 
@@ -140,12 +140,8 @@ title_data = pomps.merge_data_sources(
     merge_func=title_merge_func,
 )
 
-grouped_name_basics = pomps.group_data(
-    source_path=name_basics, group_key_func=lambda x: x['imdb_nconst'], group_by_name='imdb_nconst', group_buckets=13
-)
-grouped_title_data = pomps.group_data(
-    source_path=title_data, group_key_func=lambda x: x['imdb_nconst'], group_by_name='imdb_nconst', group_buckets=13
-)
+grouped_name_basics = pomps.group_data(source_path=name_basics, group_key_func=lambda x: x['imdb_nconst'], group_by_name='imdb_nconst')
+grouped_title_data = pomps.group_data(source_path=title_data, group_key_func=lambda x: x['imdb_nconst'], group_by_name='imdb_nconst')
 
 
 def name_title_merge_func(val):

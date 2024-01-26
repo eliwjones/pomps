@@ -4,10 +4,13 @@ import shutil
 
 from pathlib import Path
 
+import util
+
+
 DEBUG_MODULUS = 369_369
 
 
-def load_and_transform_source_data(name, namespace, transform_func, load_func, group_key_func=None, group_buckets=10):
+def load_and_transform_source_data(name, namespace, transform_func, load_func, group_key_func=None):
     source_path = f"{namespace}/{name}/source_data.jsonl"
     transformed_path = f"{namespace}/{name}/transformed_source_data.jsonl"
 
@@ -25,7 +28,7 @@ def load_and_transform_source_data(name, namespace, transform_func, load_func, g
         Path(source_path + '.tmp').replace(source_path)
 
     if group_key_func:
-        grouped_path = group_data(source_path, group_key_func, group_buckets)
+        grouped_path = group_data(source_path, group_key_func)
 
         source_path = grouped_path
 
@@ -44,10 +47,8 @@ def load_and_transform_source_data(name, namespace, transform_func, load_func, g
     return transformed_path
 
 
-def group_data(source_path, group_key_func, group_buckets, group_by_name=''):
-    """
-    TODO: group_buckets number should be calculated in here based on Available RAM and source_path file_size.
-    """
+def group_data(source_path, group_key_func, group_by_name=''):
+    group_buckets = util.calculate_group_buckets(source_path=source_path)
 
     source_filename = source_path.split('/')[-1]
 
@@ -253,7 +254,6 @@ def merge_data_sources(name, namespace, data_one_jsonl_path, data_two_jsonl_path
     with open(data_one_jsonl_path, encoding='utf-8') as data_one, open(data_two_jsonl_path, encoding='utf-8') as data_two, open(
         workfile, 'w', encoding='utf-8'
     ) as output:
-
         data_one_batch = load_line(data_one)
         data_two_batch = load_line(data_two)
 

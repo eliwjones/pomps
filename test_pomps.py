@@ -1,11 +1,12 @@
-import pomps
-
 import json
 import shutil
 import unittest
 
 from datetime import datetime
 from pathlib import Path
+
+import pomps
+
 
 TEST_DATA = './data/test'
 
@@ -30,29 +31,26 @@ class TestPomps(unittest.TestCase):
         def group_key_func(data):
             return str(data['_id'])
 
-        for group_buckets in [1, 2]:
-            grouped_path = pomps.group_data(
-                source_path=jsonl_path, group_key_func=group_key_func, group_buckets=group_buckets, group_by_name='_id'
-            )
-            expected = '\n'.join(
-                [
-                    json.dumps(
-                        {
-                            'group_key': '0',
-                            'data': [
-                                {'_id': 0, 'name': 'bob smith', 'type': 'player'},
-                                {'_id': 0, 'name': 'robert smith', 'type': 'pimp'},
-                                {'_id': 0, 'name': 'rsmith', 'type': 'witness'},
-                            ],
-                        }
-                    ),
-                    json.dumps({'group_key': '1', 'data': [{'_id': 1, 'name': 'bill b', 'type': 'witness'}]}),
-                    json.dumps({'group_key': '2', 'data': [{'_id': 2, 'name': 'joe j', 'type': 'player'}]}),
-                    '',
-                ]
-            )
+        grouped_path = pomps.group_data(source_path=jsonl_path, group_key_func=group_key_func, group_by_name='_id')
+        expected = '\n'.join(
+            [
+                json.dumps(
+                    {
+                        'group_key': '0',
+                        'data': [
+                            {'_id': 0, 'name': 'bob smith', 'type': 'player'},
+                            {'_id': 0, 'name': 'robert smith', 'type': 'pimp'},
+                            {'_id': 0, 'name': 'rsmith', 'type': 'witness'},
+                        ],
+                    }
+                ),
+                json.dumps({'group_key': '1', 'data': [{'_id': 1, 'name': 'bill b', 'type': 'witness'}]}),
+                json.dumps({'group_key': '2', 'data': [{'_id': 2, 'name': 'joe j', 'type': 'player'}]}),
+                '',
+            ]
+        )
 
-            self.assertEqual(Path(grouped_path).read_text(), expected, f"Failed for group_buckets={group_buckets}")
+        self.assertEqual(Path(grouped_path).read_text(), expected, 'Failed for group_data()')
 
     def test_load_and_transform_source_data(self):
         name = 'some_name_for_data'
@@ -117,17 +115,14 @@ class TestPomps(unittest.TestCase):
 
         namespace = pomps.namespace(root_dir=TEST_DATA, env='testing', execution_date=datetime.now())
         transformed_path = pomps.load_and_transform_source_data(
-            name=name,
-            namespace=namespace,
-            transform_func=transform_func,
-            load_func=load_func,
-            group_key_func=group_key_func,
-            group_buckets=2,
+            name=name, namespace=namespace, transform_func=transform_func, load_func=load_func, group_key_func=group_key_func
         )
 
         expected = '\n'.join(
             [
-                json.dumps({'id': 0, 'names': ['Bob Smith', 'Robert Smith', 'Rsmith'], 'classifications': ['player', 'p*mp', 'witness']}),
+                json.dumps(
+                    {'id': 0, 'names': ['Bob Smith', 'Robert Smith', 'Rsmith'], 'classifications': ['player', 'p*mp', 'witness']}
+                ),
                 json.dumps({'id': 1, 'names': ['Bill B'], 'classifications': ['witness']}),
                 json.dumps({'id': 2, 'names': ['Joe J'], 'classifications': ['player']}),
                 '',
@@ -187,7 +182,6 @@ class TestPomps(unittest.TestCase):
             transform_func=transform_func_one,
             load_func=load_func_one,
             group_key_func=group_key_func_one,
-            group_buckets=2,
         )
 
         transformed_path_two = pomps.load_and_transform_source_data(
@@ -196,12 +190,8 @@ class TestPomps(unittest.TestCase):
 
         """ Create grouped, sorted indexes """
 
-        sorted_index_one = pomps.group_data(
-            source_path=transformed_path_one, group_key_func=lambda x: x['name'], group_buckets=2, group_by_name='name'
-        )
-        sorted_index_two = pomps.group_data(
-            source_path=transformed_path_two, group_key_func=lambda x: x['name'], group_buckets=2, group_by_name='name'
-        )
+        sorted_index_one = pomps.group_data(source_path=transformed_path_one, group_key_func=lambda x: x['name'], group_by_name='name')
+        sorted_index_two = pomps.group_data(source_path=transformed_path_two, group_key_func=lambda x: x['name'], group_by_name='name')
 
         """ merge """
 
