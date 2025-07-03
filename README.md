@@ -21,7 +21,7 @@ The [example.py](https://github.com/eliwjones/pomps/blob/master/example.py) file
 
 ## Quickstart
 
-There are no external dependencies, this is tested on Windows and Linux with Python 3.9 but should work just fine on OS X as well.
+There are no external dependencies, this is tested on Windows, Mac OS and Linux with Python 3.9 and PyPy 3.9.
 
 ```
 $ git clone git@github.com:eliwjones/pomps.git
@@ -39,4 +39,4 @@ Checks like [this](https://github.com/eliwjones/pomps/blob/8071727d71408182c60cb
 
 The general aim is to keep this as stupidly simple as possible while clearly showing how to transform, group and merge data.
 
-With that said, we are leaving a lot of CPU on the table when grouping and sorting the buckets, so I may add a multiprocessing Pool somewhere in [here](https://github.com/eliwjones/pomps/blob/bbcf534282152a2e000c1003ecf79f4e08794fb2/pomps.py#L129-L158)
+With that said, we are leaving a lot of CPU on the table when grouping and sorting the buckets, ~~so I may add a multiprocessing Pool somewhere in~~ [here](https://github.com/eliwjones/pomps/blob/bbcf534282152a2e000c1003ecf79f4e08794fb2/pomps.py#L129-L158).  Tests indicated that the performance bump was less than 30%, so it is not worth the complexity tradeoff.  We'd prefer to just rewrite to golang if speed and concurrency are desired.
