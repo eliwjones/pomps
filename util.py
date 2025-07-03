@@ -8,7 +8,7 @@ from pathlib import Path
 def available_ram_bytes():
     if platform.system() == "Linux":
         free_b = subprocess.run(['free', '-b'], capture_output=True, text=True, check=True)
-        free_mem = free_b.stdout.split('\n')[1].split()[3]
+        free_mem = int(free_b.stdout.split('\n')[1].split()[3])
 
         return free_mem
 
