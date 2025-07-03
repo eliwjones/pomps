@@ -29,6 +29,48 @@ $ cd pomps
 $ python test_pomps.py  # or python example.py if you have ~42 minutes to spare (~23 minutes with pypy)
 ```
 
+If you choose to run example.py, after it is complete you can view the final data like so:
+```
+$ cat data/example/20230118-120000-000000/name_data/merged.jsonl | grep '"name": "Marlon Brando"' | python -m json.tool
+{
+    "imdb_nconst": "nm0000008",
+    "name": "Marlon Brando",
+    "birth_year": "1924",
+    "death_year": "2004",
+    "professions": [
+        "actor",
+        "director",
+        "writer"
+    ],
+    "popular_titles": [
+        {
+            "imdb_tconst": "tt0047296",
+            "title": "On the Waterfront",
+            "year": "1954",
+            "category": "actor"
+        },
+        {
+            "imdb_tconst": "tt0068646",
+            "title": "The Godfather",
+            "year": "1972",
+            "category": "actor"
+        },
+        {
+            "imdb_tconst": "tt0070849",
+            "title": "Last Tango in Paris",
+            "year": "1972",
+            "category": "actor"
+        },
+        {
+            "imdb_tconst": "tt0078788",
+            "title": "Apocalypse Now",
+            "year": "1979",
+            "category": "actor"
+        }
+    ]
+}
+```
+
 ## Features
 
 Basic resumeability is built in.  If you are in the middle of a large load, merge of multiple datasets and a bug breaks a transform, load or group func, you can fix your bug and just re-run the code using the same namespace, execution_date.  It will pick up where it last left off.
